@@ -21,24 +21,6 @@ jobs:
         run: |
           pip install pandas numpy pyarrow requests tqdm plotly joblib yfinance paramiko
 
-      - name: Download ticker list
-        run: |
-          if [ ! -f "top_5000_us_by_marketcap.csv" ]; then
-            curl -L -o top_5000_us_by_marketcap.csv https://github.com/yszanwar/phase2_qrt_challenge/releases/download/signals/top_5000_us_by_marketcap.csv
-            
-            # Validate the download
-            if [ ! -f "top_5000_us_by_marketcap.csv" ] || [ ! -s "top_5000_us_by_marketcap.csv" ]; then
-              echo "ERROR: Failed to download top_5000_us_by_marketcap.csv"
-              exit 1
-            fi
-            
-            # Verify it's a valid CSV with expected columns
-            head -1 "top_5000_us_by_marketcap.csv" | grep -iE 'symbol|ticker' || {
-              echo "ERROR: CSV does not contain 'symbol' or 'ticker' column"
-              exit 1
-            }
-          fi
-
       - name: Download Pricing Data
         run: python yfinance_download.py --input top_5000_us_by_marketcap.csv --output all_prices_5000_tickers.parquet
 
@@ -53,25 +35,23 @@ jobs:
 
       - name: Upload to QSEC
         run: |
-          # Use qsec_upload.py as a module or script
-          python -c '
+          python << 'EOF'
           import os
           from pathlib import Path
-          from qsec_upload import upload_targets_file, prepare_targets_file, Region
           import pandas as pd
+          from qsec_upload import upload_targets_file, prepare_targets_file, Region, validate_targets_file
           
           targets_csv_dir = Path("targets")
           # The prepare script will format it according to the QSEC format and emit a new CSV
           targets_df = pd.read_csv(targets_csv_dir / "targets.csv")
           
-          group_id = "IND03" # or similar
+          group_id = "IND03" # Make sure this matches your actual QRT Group ID
           region = Region.AMER
           
           # This writes the formatted csv
           formatted_csv_path = prepare_targets_file(targets_df, group_id, region, targets_csv_dir)
           
           # Validate and Upload
-          from qsec_upload import validate_targets_file
           errors = validate_targets_file(formatted_csv_path)
           if errors:
               print(errors)
@@ -81,8 +61,8 @@ jobs:
           upload_targets_file(
               targets_csv_path=formatted_csv_path,
               region=region,
-              sftp_username="q5106",
+              sftp_username="q5106", # Ensure this is your correct SFTP username
               private_key_path=Path("ind03_id_rsa"),
               sftp_host="sftp.qrt.cloud",
           )
-          '
+          EOF
