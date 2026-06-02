@@ -31,7 +31,7 @@ equal_weight_portfolio = selected_signals.sum(axis=1)
 # %%
 #Equal weight sharpe
 print("Equal Weight Portfolio Sharpe Ratio:", np.round(equal_weight_portfolio.mean() / equal_weight_portfolio.std() * (252 ** 0.5), 2))
-equal_weight_portfolio.cumsum().plot(title="Equal Weight Portfolio Cumulative Returns")
+# equal_weight_portfolio.cumsum().plot(title="Equal Weight Portfolio Cumulative Returns")
 
 # %%
 #Equal Vol Portfolio
@@ -43,7 +43,7 @@ equal_vol_portfolio = (selected_signals * weights).sum(axis=1)
 # %%
 #Equal vol sharpe
 print("Equal Vol Portfolio Sharpe Ratio:", np.round(equal_vol_portfolio.mean() / equal_vol_portfolio.std() * (252 ** 0.5), 2))
-equal_vol_portfolio.cumsum().plot(title="Equal Vol Portfolio Cumulative Returns")
+# equal_vol_portfolio.cumsum().plot(title="Equal Vol Portfolio Cumulative Returns")
 
 # %%
 cov = selected_signals.cov()
@@ -65,7 +65,7 @@ mv_portfolio = (selected_signals * mv_weights).sum(axis=1)
 # %%
 #Mean Variance Optimized Sharpe
 print("Mean Variance Portfolio Sharpe Ratio:", np.round(mv_portfolio.mean() / mv_portfolio.std() * (252 ** 0.5), 2))
-mv_portfolio.cumsum().plot(title="Mean Variance Portfolio Cumulative Returns")
+# mv_portfolio.cumsum().plot(title="Mean Variance Portfolio Cumulative Returns")
 
 # %%
 
