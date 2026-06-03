@@ -27,3 +27,10 @@ jobs:
 
       - name: Run WorldQuant Alpha Sector Backtest
         run: python 5_test_worldquant_alphas.py
+
+      # --- ADDED THIS STEP TO SAVE THE CSV ---
+      - name: Upload CSV Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: sector-alpha-results
+          path: all_alpha_sector_results.csv
