@@ -39,11 +39,12 @@ class WorldQuantAlphas:
     def alpha_001(self):
         cond = self.returns < 0
         std_ret = self.returns.rolling(20).std()
-        val = cond.where(std_ret, self.close)
+        val = std_ret.where(cond, self.close)
         return self.rank(self.ts_argmax(self.signedpower(val, 2), 5)) - 0.5
 
     def alpha_002(self):
-        term1 = self.rank(self.delta(np.log(self.volume), 2))
+        # Add 1 to volume to prevent log(0) -inf errors
+        term1 = self.rank(self.delta(np.log(self.volume + 1), 2))
         term2 = self.rank((self.close - self.open) / self.open)
         return -1 * self.correlation(term1, term2, 6)
 
@@ -118,7 +119,7 @@ if __name__ == "__main__":
     sector_mapping = pd.read_csv(os.path.join(BASE_DIR, "top_5000_us_by_marketcap.csv")).set_index("symbol")["sector"]
 
     df_volume = pv['Volume']
-    df_vwap = (pv['Volume'] * pv['Adj Close']).groupby(level=0).cumsum() / pv['Volume'].groupby(level=0).cumsum()
+    df_vwap = (pv['High'] + pv['Low'] + pv['Adj Close']) / 3
     df_adv20 = df_volume.rolling(20).mean()
 
     # Generate Features
