@@ -103,7 +103,19 @@ def generate_sector_portfolio_vectorized(
     signal1 = signal1.div(signal1.abs().sum(axis=1), axis=0)
     
     portfolio = -1 * signal1.fillna(0)
-    return portfolio.div(portfolio.abs().sum(axis=1), axis=0).fillna(0)
+    portfolio = portfolio.div(portfolio.abs().sum(axis=1), axis=0).fillna(0)
+    
+    # QRT Safety Check: Ensure no single weight exceeds 5% constraint
+    # Calculate the max absolute weight for each day
+    max_weights = portfolio.abs().max(axis=1)
+    
+    # If any weight exceeds 0.049, create a scale-down factor for that day
+    scale_down_factors = np.where(max_weights > 0.049, 0.049 / max_weights, 1.0)
+    
+    # Multiply the portfolio by the scale-down factors along the time axis
+    portfolio = portfolio.mul(scale_down_factors, axis=0)
+    
+    return portfolio.fillna(0)
 
 # ==========================================
 # 3. Main Execution Block
