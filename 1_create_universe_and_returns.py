@@ -33,7 +33,7 @@ df_average_daily_volume = df_daily_volume.rolling(window=20, min_periods=1).mean
 # %%
 #Creating 5M+ Average Daily Volume Universe
 df_universe_5m = (df_average_daily_volume  > 5_000_000).astype(int)
-df_universe_5m.sum(axis=1).plot()
+# df_universe_5m.sum(axis=1).plot()
 
 # %%
 # Saving 5M universe to stores folder
@@ -43,7 +43,7 @@ df_universe_5m.to_parquet(os.path.join(DATA_DIR, "universe_5m.parquet"),engine="
 # %%
 #Creating 1M+ Average Daily Volume Universe
 df_universe_1m = (df_average_daily_volume  > 1_000_000).astype(int)
-df_universe_1m.sum(axis=1).plot()
+# df_universe_1m.sum(axis=1).plot()
 
 # %%
 #Saving 1M universe to parquet file
