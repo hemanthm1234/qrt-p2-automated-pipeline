@@ -144,9 +144,16 @@ class WorldQuantAlphas:
         methods = [m for m in dir(self) if m.startswith('alpha_')]
         for m in methods:
             try:
-                alpha_dict[m] = getattr(self, m)()
+                result = getattr(self, m)()
+                
+                # FIX: Automatically convert any raw numpy arrays back to Pandas DataFrames
+                if isinstance(result, np.ndarray):
+                    result = pd.DataFrame(result, index=self.close.index, columns=self.close.columns)
+                    
+                alpha_dict[m] = result
             except Exception as e:
-                print(f"Skipping {m} due to insufficient data window")
+                # Upgraded print statement to show the exact error if an alpha fails
+                print(f"Skipping {m} due to error: {e}")
         
         features_df = pd.concat(alpha_dict, axis=1)
         features_df.columns.names = ["feature", "ticker"]
