@@ -13,20 +13,23 @@ def parse_args():
     parser.add_argument(
         "--input",
         type=str,
-        default="../top_5000_us_by_marketcap.csv",
+        default="top_5000_us_by_marketcap.csv",
         help="Path to CSV containing ticker symbols.",
     )
     parser.add_argument(
         "--output",
         type=str,
-        default="all_prices_5000_tickers.parquet",
+        default="stores_created/all_prices_5000_tickers.parquet",
         help="Output Parquet file path.",
     )
+    import datetime
+    default_start = (datetime.date.today() - datetime.timedelta(days=545)).strftime('%Y-%m-%d')
+    
     parser.add_argument(
         "--start",
         type=str,
-        default="2025-01-01",
-        help="Start date for download (YYYY-MM-DD).",
+        default=default_start,
+        help="Start date for download (YYYY-MM-DD). Defaults to ~1.5 years ago.",
     )
     parser.add_argument(
         "--batch-size",

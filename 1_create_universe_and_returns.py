@@ -17,7 +17,7 @@ DATA_DIR = os.path.join(BASE_DIR, "stores_created")
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # %%
-pv = pd.read_parquet(os.path.join(BASE_DIR, "all_prices_5000_tickers.parquet"), engine="pyarrow")
+pv = pd.read_parquet(os.path.join(DATA_DIR, "all_prices_5000_tickers.parquet"), engine="pyarrow")
 
 # Think hard: need to generate for last 6 months, but need padding for rolling windows
 last_date = pv.index.max()

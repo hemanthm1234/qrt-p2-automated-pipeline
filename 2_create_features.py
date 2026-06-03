@@ -25,7 +25,7 @@ pv = pv.loc[pv.index >= padding_date]
 # %%
 # Calculate technical indicators using parellel processing
 # Please read file 'technical_indicators.py' for details on the indicators being calculated
-# Note this is a computationally intensive step and may take some time to complete
+# Note this is a computationally intensive step and may take some time  to complete
 
 indicators = calculate_all_indicators_parallel(pv, n_jobs=-1)
 
