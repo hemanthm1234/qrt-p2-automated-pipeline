@@ -59,8 +59,29 @@ if __name__ == "__main__":
     universe = pd.read_parquet(os.path.join(DATA_DIR, "universe_5m.parquet"))
     sector_mapping = pd.read_csv(os.path.join(BASE_DIR, "top_5000_us_by_marketcap.csv")).set_index("symbol")["sector"]
     
-    # We only need to generate targets for the absolute latest day available
+    # ====================================================
+    # YAHOO FINANCE GHOST ROW PROTECTION
+    # ====================================================
+    # YF often appends a blank row for today before the US market opens.
+    # This causes 0 volume -> NaN alphas -> 0 weights -> Empty CSV.
     latest_date = universe.index[-1]
+    
+    # Safely extract total volume avoiding Pandas indexing quirks
+    try:
+        latest_vol_data = pv['Volume'].loc[[latest_date]]
+        total_volume = latest_vol_data.sum().sum() # handles both Series and DataFrame cases
+    except KeyError:
+        # Fallback if strict date indexing fails due to type mismatches
+        total_volume = pv['Volume'].iloc[-1].sum()
+    
+    if total_volume == 0 or pd.isna(total_volume):
+        print(f"Pre-Market Ghost Row Detected ({latest_date}). Dropping it...")
+        pv = pv.iloc[:-1]
+        universe = universe.iloc[:-1]
+        latest_date = universe.index[-1]
+    # ====================================================
+
+    # We only need to generate targets for the absolute latest valid day
     active_universe = universe.loc[[latest_date]].astype(bool)
 
     # ----------------------------------------------------
@@ -69,7 +90,7 @@ if __name__ == "__main__":
     print("\n" + "="*50)
     print("      PRE-FLIGHT DATE VERIFICATION")
     print("="*50)
-    print(f"-> Latest Market Close Data Found: {latest_date.date() if hasattr(latest_date, 'date') else latest_date}")
+    print(f"-> Latest Valid Market Data Found: {latest_date.date() if hasattr(latest_date, 'date') else latest_date}")
     print("-> Status: OK. Generating targets for the next US market open.")
     print("="*50 + "\n")
 
@@ -96,7 +117,7 @@ if __name__ == "__main__":
             if isinstance(raw_signal, np.ndarray):
                 raw_signal = pd.DataFrame(raw_signal, index=pv.index, columns=pv.columns)
                 
-            # Grab the absolute last row by position to bypass date string type mismatches
+            # Grab the absolute last valid row by position
             today_signal_row = raw_signal.iloc[[-1]] 
             
             # Extract today's row, rank, neutralize, and invert globally
