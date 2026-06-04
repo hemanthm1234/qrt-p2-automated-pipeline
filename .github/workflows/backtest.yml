@@ -1,0 +1,40 @@
+name: Backtest Blended Strategy
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  run-blended-backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install pandas numpy pyarrow requests tqdm plotly joblib yfinance paramiko scipy
+
+      - name: Download Pricing Data
+        run: python yfinance_download.py --input top_5000_us_by_marketcap.csv --output all_prices_5000_tickers.parquet
+
+      - name: Create Universe and Returns
+        run: python 1_create_universe_and_returns.py
+
+      - name: Create Technical Features (Beta)
+        run: python 2_create_features.py
+
+      - name: Run Blended Backtest
+        run: python 6_backtest_blended_strategy.py
+
+      - name: Upload Backtest Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: blended-backtest-results
+          path: |
+            blended_strategy_stats.csv
+            blended_cumulative_pnl.html
