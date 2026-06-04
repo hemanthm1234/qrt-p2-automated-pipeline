@@ -43,7 +43,7 @@ def rank_neutralize_scale(signal_df, universe_bool, sector_mapping):
     
     aligned_sectors = sector_mapping.reindex(signal.columns).fillna('Unknown')
     
-    # NEW PANDAS COMPATIBILITY FIX: Transpose (.T), Groupby, Transform, Transpose Back
+    # Modern Pandas Fix: Transpose (.T), Groupby, Transform, Transpose Back
     sector_means = signal.T.groupby(aligned_sectors).transform('mean').T
     signal = signal.sub(sector_means)
     
@@ -85,20 +85,18 @@ if __name__ == "__main__":
     master_alpha = pd.DataFrame(0.0, index=active_universe.index, columns=active_universe.columns)
     
     for sector, best_alpha in best_sector_alphas.items():
-        # Safety check: ensure the method exists before calling it
         if not hasattr(wq_engine, best_alpha):
             print(f"Skipping {best_alpha} for {sector}: Method not found in WorldQuantAlphas class.")
             continue
             
         try:
             print(f"Computing {best_alpha} for {sector}...")
-            # THIS LINE COMPUTES THE SPECIFIC ALPHA FORMULA LIVE
             raw_signal = getattr(wq_engine, best_alpha)()
             
             if isinstance(raw_signal, np.ndarray):
                 raw_signal = pd.DataFrame(raw_signal, index=pv.index, columns=pv.columns)
                 
-            # SAFE INDEXING: Grab the absolute last row by position
+            # Grab the absolute last row by position to bypass date string type mismatches
             today_signal_row = raw_signal.iloc[[-1]] 
             
             # Extract today's row, rank, neutralize, and invert globally
@@ -106,7 +104,7 @@ if __name__ == "__main__":
             today_ranked = today_signal.rank(axis=1, pct=True, ascending=True)
             aligned_sectors = sector_mapping.reindex(today_ranked.columns).fillna('Unknown')
             
-            # NEW PANDAS COMPATIBILITY FIX
+            # Modern Pandas Fix: Transpose (.T), Groupby, Transform, Transpose Back
             sector_means = today_ranked.T.groupby(aligned_sectors).transform('mean').T
             today_neutral = today_ranked.sub(sector_means)
             
@@ -117,7 +115,6 @@ if __name__ == "__main__":
             sector_mask = (sector_mapping == sector).reindex(active_universe.columns).fillna(False)
             sector_tickers = sector_mapping[sector_mask].index.intersection(master_alpha.columns)
             
-            # Explicit assignment bypassing `.where()` broadcast bugs
             master_alpha.loc[latest_date, sector_tickers] = today_inverted[sector_tickers].fillna(0.0).values[0]
             
         except Exception as e:
