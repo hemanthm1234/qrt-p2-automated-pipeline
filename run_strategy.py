@@ -42,7 +42,10 @@ def rank_neutralize_scale(signal_df, universe_bool, sector_mapping):
     signal = signal.rank(axis=1, pct=True, ascending=True)
     
     aligned_sectors = sector_mapping.reindex(signal.columns).fillna('Unknown')
-    signal = signal.sub(signal.groupby(aligned_sectors, axis=1).transform('mean'), axis=0)
+    
+    # NEW PANDAS COMPATIBILITY FIX: Transpose (.T), Groupby, Transform, Transpose Back
+    sector_means = signal.T.groupby(aligned_sectors).transform('mean').T
+    signal = signal.sub(sector_means)
     
     portfolio = signal.fillna(0.0)
     return portfolio.div(portfolio.abs().sum(axis=1), axis=0).fillna(0.0)
@@ -95,14 +98,17 @@ if __name__ == "__main__":
             if isinstance(raw_signal, np.ndarray):
                 raw_signal = pd.DataFrame(raw_signal, index=pv.index, columns=pv.columns)
                 
-            # SAFE INDEXING: Grab the absolute last row by position (bypasses date matching errors)
+            # SAFE INDEXING: Grab the absolute last row by position
             today_signal_row = raw_signal.iloc[[-1]] 
             
             # Extract today's row, rank, neutralize, and invert globally
             today_signal = today_signal_row.reindex(columns=active_universe.columns).where(active_universe, np.nan)
             today_ranked = today_signal.rank(axis=1, pct=True, ascending=True)
             aligned_sectors = sector_mapping.reindex(today_ranked.columns).fillna('Unknown')
-            today_neutral = today_ranked.sub(today_ranked.groupby(aligned_sectors, axis=1).transform('mean'), axis=0)
+            
+            # NEW PANDAS COMPATIBILITY FIX
+            sector_means = today_ranked.T.groupby(aligned_sectors).transform('mean').T
+            today_neutral = today_ranked.sub(sector_means)
             
             # WQ Inversion
             today_inverted = -1.0 * today_neutral
