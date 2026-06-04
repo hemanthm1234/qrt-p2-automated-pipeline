@@ -120,8 +120,10 @@ if __name__ == "__main__":
             # Grab the absolute last valid row by position
             today_signal_row = raw_signal.iloc[[-1]] 
             
-            # Extract today's row, rank, neutralize, and invert globally
-            today_signal = today_signal_row.reindex(columns=active_universe.columns).where(active_universe, np.nan)
+            # BYPASS PANDAS INDEX BUGS: Reindex to match columns, then apply boolean mask using raw NumPy values
+            today_signal = today_signal_row.reindex(columns=active_universe.columns)
+            today_signal.iloc[0, ~active_universe.iloc[0].values] = np.nan
+            
             today_ranked = today_signal.rank(axis=1, pct=True, ascending=True)
             aligned_sectors = sector_mapping.reindex(today_ranked.columns).fillna('Unknown')
             
@@ -132,15 +134,14 @@ if __name__ == "__main__":
             # WQ Inversion
             today_inverted = -1.0 * today_neutral
             
-            # Map strictly to the target sector
+            # SAFE SECTOR FILTERING: Grab True tickers directly from the mask's own index
             sector_mask = (sector_mapping == sector).reindex(active_universe.columns).fillna(False)
-            sector_tickers = sector_mapping[sector_mask].index.intersection(master_alpha.columns)
+            sector_tickers = sector_mask[sector_mask].index
             
             master_alpha.loc[latest_date, sector_tickers] = today_inverted[sector_tickers].fillna(0.0).values[0]
             
         except Exception as e:
             print(f"Warning: Failed to process {best_alpha} for {sector}: {e}")
-
     # ----------------------------------------------------
     # STEP B: Final Scaling & Upload Prep
     # ----------------------------------------------------
