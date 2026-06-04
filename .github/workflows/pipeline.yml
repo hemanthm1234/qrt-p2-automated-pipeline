@@ -21,7 +21,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install "pandas<2.1.0" numpy pyarrow paramiko yfinance scipy joblib
+          pip install "pandas<2.1.0" "numpy<2.0.0" pyarrow paramiko yfinance scipy joblib
 
       - name: Download Latest Market Data
         run: |
