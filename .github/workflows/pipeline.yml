@@ -44,10 +44,10 @@ jobs:
           chmod 600 private_key.pem
           python qsec_upload.py
 
-      # --- NEW STEP: SAVES THE CSV AS A GITHUB ARTIFACT ---
+     # --- NEW STEP: SAVES THE CSV AS A GITHUB ARTIFACT ---
       - name: Save Uploaded Targets as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: submitted-targets-csv
-          path: targets/submitted_archives/*.csv
+          path: targets/qrt_academy_*.csv
           retention-days: 90
