@@ -3,7 +3,7 @@ name: QRT Live Trading Pipeline
 on:
   schedule:
     # Runs at 21:00 UTC (2:30 AM IST) Tuesday through Saturday
-    - cron: '0 21 * * 1-6'
+    - cron: '0 21 * * 0-6'
   workflow_dispatch:
 
 jobs:
